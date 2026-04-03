@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 
 import {
+  GrpcExceptionFilter,
   PrismaModule,
   RpcLoggingInterceptor,
   createLoggingModule,
@@ -15,6 +16,10 @@ import { WalletModule } from './wallet/wallet.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: RpcLoggingInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: GrpcExceptionFilter,
     },
   ],
 })

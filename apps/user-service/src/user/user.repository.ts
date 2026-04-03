@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 
-import { BaseEntityRepository } from '../../../../packages/common/src/base/base.entity.repository';
-import { PrismaService } from '../../../../packages/common/src/prisma/prisma.service';
+import { BaseEntityRepository, PrismaService } from '../../../../packages/common/src';
 
 type CreateUserData = {
   email: string;

@@ -6,7 +6,7 @@ import {
   USER_PROTO_PACKAGE,
   getGrpcUrl,
   getProtoPath,
-} from '../../../../packages/common/src/grpc/grpc.constants';
+} from '../../../../packages/common/src';
 
 import { UserGrpcClient } from './user-grpc.client';
 import { WalletController } from './wallet.controller';

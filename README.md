@@ -159,6 +159,14 @@ npm run start:dev
 npm run build
 ```
 
+## Tests
+
+Run the integration test suite:
+
+```bash
+npm run test:integration
+```
+
 ## gRPC Endpoints
 
 ### User Service
@@ -206,6 +214,13 @@ For `CreateWallet`, `GetWallet`, `CreditWallet`, and `DebitWallet`:
 
 - Server: `localhost:50052`
 - Proto file: `packages/proto/wallet.proto`
+
+Optional gRPC metadata headers for tracing:
+
+- `x-request-id`
+- `x-idempotency-key`
+
+If provided, these values are logged and propagated across inter-service gRPC calls.
 
 ### Example Requests
 
@@ -374,3 +389,4 @@ grpcurl -plaintext -import-path packages/proto -proto user.proto -d "{\"id\":\"g
 - The wallet service never uses user business logic directly. It validates user existence by calling the user service over gRPC.
 - A single PostgreSQL database is used for the assessment to keep setup simple, while service boundaries are preserved in code.
 - The Prisma schema intentionally avoids a direct relation between `User` and `Wallet` so each service keeps ownership of its own model.
+- Structured logging is implemented with `nestjs-pino`, and logs include request correlation data when `x-request-id` or `x-idempotency-key` metadata is supplied.

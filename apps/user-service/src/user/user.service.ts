@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
 
-import { BaseEntityGrpcService } from '../../../../packages/common/src/base/base.entity-grpc.service';
+import { BaseEntityGrpcService } from '../../../../packages/common/src';
 
 import { CreateUserRequestDto } from './dto/create-user-request.dto';
 import { GetUserByIdRequestDto } from './dto/get-user-by-id-request.dto';
@@ -41,6 +41,8 @@ export class UserService extends BaseEntityGrpcService<User, UserResponse> {
       name: payload.name,
     });
 
+    // Keep user creation effectively all-or-nothing for callers even though
+    // wallet provisioning happens in a separate service over gRPC.
     try {
       await this.walletGrpcClient.createWallet({ userId: user.id });
 

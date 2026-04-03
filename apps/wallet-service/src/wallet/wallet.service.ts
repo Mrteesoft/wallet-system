@@ -3,11 +3,11 @@ import { Injectable } from '@nestjs/common';
 import { Wallet } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
 
-import { BaseEntityGrpcService } from '../../../../packages/common/src/base/base.entity-grpc.service';
 import {
+  BaseEntityGrpcService,
   EntityNotFoundError,
   InsufficientBalanceError,
-} from '../../../../packages/common/src/errors/domain.errors';
+} from '../../../../packages/common/src';
 
 import { CreateWalletRequestDto } from './dto/create-wallet-request.dto';
 import { GetWalletRequestDto } from './dto/get-wallet-request.dto';
@@ -102,7 +102,6 @@ export class WalletService extends BaseEntityGrpcService<Wallet, WalletResponse>
           userId: payload.userId,
           amount: payload.amount,
         });
-        this.notFound(error.message);
       }
 
       this.logActionFailed('credit_wallet', error, {
@@ -142,7 +141,6 @@ export class WalletService extends BaseEntityGrpcService<Wallet, WalletResponse>
           userId: payload.userId,
           amount: payload.amount,
         });
-        this.notFound(error.message);
       }
 
       if (error instanceof InsufficientBalanceError) {
@@ -150,7 +148,6 @@ export class WalletService extends BaseEntityGrpcService<Wallet, WalletResponse>
           userId: payload.userId,
           amount: payload.amount,
         });
-        this.failedPrecondition(error.message);
       }
 
       this.logActionFailed('debit_wallet', error, {

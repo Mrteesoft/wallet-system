@@ -3,9 +3,10 @@ import { ClientGrpc } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 
 import {
+  createGrpcMetadataFromContext,
   WALLET_GRPC_CLIENT,
   WALLET_SERVICE_NAME,
-} from '../../../../packages/common/src/grpc/grpc.constants';
+} from '../../../../packages/common/src';
 
 import {
   CreateWalletGrpcRequest,
@@ -25,6 +26,8 @@ export class WalletGrpcClient implements OnModuleInit {
   }
 
   createWallet(data: CreateWalletGrpcRequest): Promise<WalletGrpcResponse> {
-    return lastValueFrom(this.walletService.createWallet(data));
+    return lastValueFrom(
+      this.walletService.createWallet(data, createGrpcMetadataFromContext()),
+    );
   }
 }

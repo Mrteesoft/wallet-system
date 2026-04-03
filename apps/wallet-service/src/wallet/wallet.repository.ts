@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Wallet } from '@prisma/client';
 
-import { BaseEntityRepository } from '../../../../packages/common/src/base/base.entity.repository';
 import {
+  BaseEntityRepository,
   EntityNotFoundError,
   InsufficientBalanceError,
-} from '../../../../packages/common/src/errors/domain.errors';
-import { PrismaService } from '../../../../packages/common/src/prisma/prisma.service';
+  PrismaService,
+} from '../../../../packages/common/src';
 
 type CreateWalletData = {
   userId: string;
@@ -59,6 +59,8 @@ export class WalletRepository extends BaseEntityRepository<Wallet, CreateWalletD
   debitByUserId(userId: string, amount: number): Promise<Wallet> {
     const decimalAmount = this.toDecimal(amount);
 
+    // Run the balance check and decrement inside one transaction so debits
+    // cannot succeed based on a stale pre-check result.
     return this.prisma.$transaction(async (transaction) => {
       const wallet = await transaction.wallet.findUnique({
         where: { userId },

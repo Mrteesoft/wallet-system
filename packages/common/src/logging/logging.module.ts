@@ -1,6 +1,8 @@
 import { DynamicModule } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
 
+import { requestContext } from '../context/request-context';
+
 const isPrettyLoggingEnabled = (): boolean =>
   process.env.LOG_PRETTY !== 'false' && process.env.NODE_ENV !== 'production';
 
@@ -10,6 +12,12 @@ export const createLoggingModule = (serviceName: string): DynamicModule =>
       level: process.env.LOG_LEVEL ?? 'info',
       base: {
         service: serviceName,
+      },
+      mixin() {
+        return {
+          idempotencyKey: requestContext.getIdempotencyKey(),
+          requestId: requestContext.getRequestId(),
+        };
       },
       messageKey: 'message',
       transport: isPrettyLoggingEnabled()

@@ -3,9 +3,10 @@ import { ClientGrpc } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 
 import {
+  createGrpcMetadataFromContext,
   USER_GRPC_CLIENT,
   USER_SERVICE_NAME,
-} from '../../../../packages/common/src/grpc/grpc.constants';
+} from '../../../../packages/common/src';
 
 import { UserGrpcResponse, UserServiceGrpc } from './interfaces/user-grpc.interface';
 
@@ -20,6 +21,11 @@ export class UserGrpcClient implements OnModuleInit {
   }
 
   getUserById(userId: string): Promise<UserGrpcResponse> {
-    return lastValueFrom(this.userService.getUserById({ id: userId }));
+    return lastValueFrom(
+      this.userService.getUserById(
+        { id: userId },
+        createGrpcMetadataFromContext(),
+      ),
+    );
   }
 }

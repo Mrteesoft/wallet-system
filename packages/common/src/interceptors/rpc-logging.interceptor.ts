@@ -4,12 +4,19 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { status } from '@grpc/grpc-js';
 import { PinoLogger } from 'nestjs-pino';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 
-const getStatusName = (code: number): string => status[code] ?? 'UNKNOWN';
+import {
+  createRequestContext,
+  extractGrpcMetadata,
+  requestContext,
+} from '../context/request-context';
+import {
+  getGrpcStatusName,
+  mapExceptionToGrpcPayload as mapErrorToGrpcPayload,
+} from '../errors/grpc-error.util';
 
 @Injectable()
 export class RpcLoggingInterceptor implements NestInterceptor {
@@ -23,51 +30,49 @@ export class RpcLoggingInterceptor implements NestInterceptor {
     const controllerName = context.getClass().name;
     const methodName = context.getHandler().name;
     const routeName = `${controllerName}.${methodName}`;
+    const metadata = extractGrpcMetadata(context.getArgs());
+    const requestDetails = createRequestContext(metadata);
 
-    this.logger.info(
-      {
-        event: 'rpc_request',
-        routeName,
-        payload: payload ?? {},
-      },
-      'Incoming gRPC request',
-    );
+    return requestContext.run(requestDetails, () => {
+      this.logger.info(
+        {
+          event: 'rpc_request',
+          routeName,
+          payload: payload ?? {},
+        },
+        'Incoming gRPC request',
+      );
 
-    return next.handle().pipe(
-      tap((response) => {
-        this.logger.info(
-          {
-            event: 'rpc_response',
-            routeName,
-            grpcStatusCode: status.OK,
-            grpcStatusName: getStatusName(status.OK),
-            response: response ?? {},
-          },
-          'Outgoing gRPC response',
-        );
-      }),
-      catchError((error: unknown) => {
-        const grpcStatusCode =
-          typeof error === 'object' &&
-          error !== null &&
-          'code' in error &&
-          typeof (error as { code?: unknown }).code === 'number'
-            ? (error as { code: number }).code
-            : status.UNKNOWN;
+      return next.handle().pipe(
+        tap((response) => {
+          this.logger.info(
+            {
+              event: 'rpc_response',
+              routeName,
+              grpcStatusCode: 0,
+              grpcStatusName: getGrpcStatusName(0),
+              response: response ?? {},
+            },
+            'Outgoing gRPC response',
+          );
+        }),
+        catchError((error: unknown) => {
+          const grpcError = mapErrorToGrpcPayload(error);
 
-        this.logger.error(
-          {
-            event: 'rpc_error',
-            routeName,
-            grpcStatusCode,
-            grpcStatusName: getStatusName(grpcStatusCode),
-            error,
-          },
-          'gRPC request failed',
-        );
+          this.logger.error(
+            {
+              event: 'rpc_error',
+              routeName,
+              grpcStatusCode: grpcError.code,
+              grpcStatusName: getGrpcStatusName(grpcError.code),
+              error,
+            },
+            'gRPC request failed',
+          );
 
-        return throwError(() => error);
-      }),
-    );
+          return throwError(() => error);
+        }),
+      );
+    });
   }
 }

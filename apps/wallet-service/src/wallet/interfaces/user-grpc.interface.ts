@@ -1,3 +1,4 @@
+import { Metadata } from '@grpc/grpc-js';
 import { Observable } from 'rxjs';
 
 export interface UserGrpcResponse {
@@ -8,5 +9,8 @@ export interface UserGrpcResponse {
 }
 
 export interface UserServiceGrpc {
-  getUserById(data: { id: string }): Observable<UserGrpcResponse>;
+  getUserById(
+    data: { id: string },
+    metadata?: Metadata,
+  ): Observable<UserGrpcResponse>;
 }

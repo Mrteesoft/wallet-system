@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 
-import { WALLET_SERVICE_NAME } from '../../../../packages/common/src/grpc/grpc.constants';
+import { WALLET_SERVICE_NAME } from '../../../../packages/common/src';
 
 import { CreateWalletRequestDto } from './dto/create-wallet-request.dto';
 import { GetWalletRequestDto } from './dto/get-wallet-request.dto';

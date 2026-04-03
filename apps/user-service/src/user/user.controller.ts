@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 
-import { USER_SERVICE_NAME } from '../../../../packages/common/src/grpc/grpc.constants';
+import { USER_SERVICE_NAME } from '../../../../packages/common/src';
 
 import { CreateUserRequestDto } from './dto/create-user-request.dto';
 import { GetUserByIdRequestDto } from './dto/get-user-by-id-request.dto';

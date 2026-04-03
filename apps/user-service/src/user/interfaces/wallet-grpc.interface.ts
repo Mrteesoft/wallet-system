@@ -1,3 +1,4 @@
+import { Metadata } from '@grpc/grpc-js';
 import { Observable } from 'rxjs';
 
 export interface CreateWalletGrpcRequest {
@@ -12,5 +13,8 @@ export interface WalletGrpcResponse {
 }
 
 export interface WalletServiceGrpc {
-  createWallet(data: CreateWalletGrpcRequest): Observable<WalletGrpcResponse>;
+  createWallet(
+    data: CreateWalletGrpcRequest,
+    metadata?: Metadata,
+  ): Observable<WalletGrpcResponse>;
 }
