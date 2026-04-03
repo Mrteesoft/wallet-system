@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { status } from '@grpc/grpc-js';
 import { RpcException } from '@nestjs/microservices';
 
@@ -30,9 +31,16 @@ export abstract class BaseGrpcService {
     return entity;
   }
 
-  protected ensurePositiveAmount(amount: number, fieldName = 'amount'): void {
-    if (!Number.isFinite(amount) || amount <= 0) {
+  protected ensurePositiveAmount(
+    amount: Prisma.Decimal.Value,
+    fieldName = 'amount',
+  ): Prisma.Decimal {
+    const decimalAmount = new Prisma.Decimal(amount);
+
+    if (!decimalAmount.isFinite() || decimalAmount.lte(0)) {
       this.invalidArgument(`${fieldName} must be a positive number`);
     }
+
+    return decimalAmount;
   }
 }

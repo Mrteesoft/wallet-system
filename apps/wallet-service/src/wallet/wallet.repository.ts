@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Wallet } from '@prisma/client';
+import { Prisma, Wallet } from '@prisma/client';
 
 import {
   BaseEntityRepository,
@@ -38,14 +38,7 @@ export class WalletRepository extends BaseEntityRepository<Wallet, CreateWalletD
     });
   }
 
-  async findByUserIdOrThrow(userId: string): Promise<Wallet> {
-    return this.ensureEntity(
-      await this.findByUserId(userId),
-      `Wallet for user ${userId} not found`,
-    );
-  }
-
-  creditByUserId(userId: string, amount: number): Promise<Wallet> {
+  creditByUserId(userId: string, amount: Prisma.Decimal.Value): Promise<Wallet> {
     return this.prisma.wallet.update({
       where: { userId },
       data: {
@@ -56,7 +49,7 @@ export class WalletRepository extends BaseEntityRepository<Wallet, CreateWalletD
     });
   }
 
-  debitByUserId(userId: string, amount: number): Promise<Wallet> {
+  debitByUserId(userId: string, amount: Prisma.Decimal.Value): Promise<Wallet> {
     const decimalAmount = this.toDecimal(amount);
 
     // Run the balance check and decrement inside one transaction so debits

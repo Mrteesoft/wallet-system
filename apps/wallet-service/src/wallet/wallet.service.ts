@@ -49,7 +49,7 @@ export class WalletService extends BaseEntityGrpcService<Wallet, WalletResponse>
     this.logActionSucceeded('create_wallet', {
       walletId: wallet.id,
       userId: wallet.userId,
-      balance: Number(wallet.balance),
+      balance: this.formatBalance(wallet.balance),
     });
 
     return this.toResponse(wallet);
@@ -74,25 +74,23 @@ export class WalletService extends BaseEntityGrpcService<Wallet, WalletResponse>
   async creditWallet(
     payload: UpdateWalletBalanceRequestDto,
   ): Promise<WalletResponse> {
+    const amount = this.ensurePositiveAmount(payload.amount);
+
     this.logActionStarted('credit_wallet', {
       userId: payload.userId,
-      amount: payload.amount,
+      amount: amount.toString(),
     });
 
-    this.ensurePositiveAmount(payload.amount);
-
     try {
-      await this.walletRepository.findByUserIdOrThrow(payload.userId);
-
       const updatedWallet = await this.walletRepository.creditByUserId(
         payload.userId,
-        payload.amount,
+        amount,
       );
 
       this.logActionSucceeded('credit_wallet', {
         userId: payload.userId,
-        amount: payload.amount,
-        balance: Number(updatedWallet.balance),
+        amount: amount.toString(),
+        balance: this.formatBalance(updatedWallet.balance),
       });
 
       return this.toResponse(updatedWallet);
@@ -100,13 +98,13 @@ export class WalletService extends BaseEntityGrpcService<Wallet, WalletResponse>
       if (error instanceof EntityNotFoundError) {
         this.logActionWarn('credit_wallet_wallet_not_found', {
           userId: payload.userId,
-          amount: payload.amount,
+          amount: amount.toString(),
         });
       }
 
       this.logActionFailed('credit_wallet', error, {
         userId: payload.userId,
-        amount: payload.amount,
+        amount: amount.toString(),
       });
       throw error;
     }
@@ -115,23 +113,23 @@ export class WalletService extends BaseEntityGrpcService<Wallet, WalletResponse>
   async debitWallet(
     payload: UpdateWalletBalanceRequestDto,
   ): Promise<WalletResponse> {
+    const amount = this.ensurePositiveAmount(payload.amount);
+
     this.logActionStarted('debit_wallet', {
       userId: payload.userId,
-      amount: payload.amount,
+      amount: amount.toString(),
     });
-
-    this.ensurePositiveAmount(payload.amount);
 
     try {
       const updatedWallet = await this.walletRepository.debitByUserId(
         payload.userId,
-        payload.amount,
+        amount,
       );
 
       this.logActionSucceeded('debit_wallet', {
         userId: payload.userId,
-        amount: payload.amount,
-        balance: Number(updatedWallet.balance),
+        amount: amount.toString(),
+        balance: this.formatBalance(updatedWallet.balance),
       });
 
       return this.toResponse(updatedWallet);
@@ -139,20 +137,20 @@ export class WalletService extends BaseEntityGrpcService<Wallet, WalletResponse>
       if (error instanceof EntityNotFoundError) {
         this.logActionWarn('debit_wallet_wallet_not_found', {
           userId: payload.userId,
-          amount: payload.amount,
+          amount: amount.toString(),
         });
       }
 
       if (error instanceof InsufficientBalanceError) {
         this.logActionWarn('debit_wallet_insufficient_balance', {
           userId: payload.userId,
-          amount: payload.amount,
+          amount: amount.toString(),
         });
       }
 
       this.logActionFailed('debit_wallet', error, {
         userId: payload.userId,
-        amount: payload.amount,
+        amount: amount.toString(),
       });
       throw error;
     }
@@ -188,8 +186,12 @@ export class WalletService extends BaseEntityGrpcService<Wallet, WalletResponse>
     return {
       id: wallet.id,
       userId: wallet.userId,
-      balance: Number(wallet.balance),
+      balance: this.formatBalance(wallet.balance),
       createdAt: wallet.createdAt.toISOString(),
     };
+  }
+
+  private formatBalance(balance: Wallet['balance']): string {
+    return balance.toFixed(2);
   }
 }

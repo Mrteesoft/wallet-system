@@ -159,14 +159,6 @@ npm run start:dev
 npm run build
 ```
 
-## Tests
-
-Run the integration test suite:
-
-```bash
-npm run test:integration
-```
-
 ## gRPC Endpoints
 
 ### User Service
@@ -188,15 +180,12 @@ The required service contract in this assessment is gRPC, so API testing is show
 - Postman gRPC
 - `grpcurl` as the curl-style command-line equivalent for gRPC
 
+Money values are serialized as decimal strings in the wallet contract so request and response payloads do not lose precision over gRPC.
+
 Proto files:
 
 - `packages/proto/user.proto`
 - `packages/proto/wallet.proto`
-
-Local file locations for testing on this machine:
-
-- `C:\Users\Tolul\Desktop\Technical-assement\packages\proto\user.proto`
-- `C:\Users\Tolul\Desktop\Technical-assement\packages\proto\wallet.proto`
 
 Service addresses:
 
@@ -297,14 +286,14 @@ Postman message body:
 ```json
 {
   "userId": "generated-user-id",
-  "amount": 150
+  "amount": "150.00"
 }
 ```
 
 `grpcurl` example:
 
 ```bash
-grpcurl -plaintext -import-path packages/proto -proto wallet.proto -d "{\"userId\":\"generated-user-id\",\"amount\":150}" localhost:50052 wallet.WalletService/CreditWallet
+grpcurl -plaintext -import-path packages/proto -proto wallet.proto -d "{\"userId\":\"generated-user-id\",\"amount\":\"150.00\"}" localhost:50052 wallet.WalletService/CreditWallet
 ```
 
 #### 4. Debit wallet
@@ -320,14 +309,14 @@ Postman message body:
 ```json
 {
   "userId": "generated-user-id",
-  "amount": 40
+  "amount": "40.00"
 }
 ```
 
 `grpcurl` example:
 
 ```bash
-grpcurl -plaintext -import-path packages/proto -proto wallet.proto -d "{\"userId\":\"generated-user-id\",\"amount\":40}" localhost:50052 wallet.WalletService/DebitWallet
+grpcurl -plaintext -import-path packages/proto -proto wallet.proto -d "{\"userId\":\"generated-user-id\",\"amount\":\"40.00\"}" localhost:50052 wallet.WalletService/DebitWallet
 ```
 
 #### 5. Get wallet

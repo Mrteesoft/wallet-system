@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export abstract class BaseRepository {
   protected constructor(protected readonly prisma: PrismaService) {}
 
-  protected toDecimal(value: number): Prisma.Decimal {
+  protected toDecimal(value: Prisma.Decimal.Value): Prisma.Decimal {
     return new Prisma.Decimal(value);
   }
 

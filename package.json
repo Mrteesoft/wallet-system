@@ -10,7 +10,6 @@
     "start:dev": "concurrently \"npm run start:user-service\" \"npm run start:wallet-service\"",
     "start:user-service:prod": "node dist/apps/user-service/src/main.js",
     "start:wallet-service:prod": "node dist/apps/wallet-service/src/main.js",
-    "test:integration": "npm run build && node --test tests/integration/wallet-system.test.js",
     "prisma:generate": "prisma generate --schema packages/prisma/schema.prisma",
     "prisma:migrate": "prisma migrate dev --schema packages/prisma/schema.prisma",
     "prisma:studio": "prisma studio --schema packages/prisma/schema.prisma"

@@ -8,7 +8,7 @@ export interface CreateWalletGrpcRequest {
 export interface WalletGrpcResponse {
   id: string;
   userId: string;
-  balance: number;
+  balance: string;
   createdAt: string;
 }
 

@@ -1,6 +1,6 @@
 export interface WalletResponse {
   id: string;
   userId: string;
-  balance: number;
+  balance: string;
   createdAt: string;
 }
