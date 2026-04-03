@@ -1,8 +1,8 @@
 {
-  "name": "backend-assessment",
+  "name": "wallet-system",
   "version": "1.0.0",
   "private": true,
-  "description": "NestJS microservice-based wallet system assessment",
+  "description": "NestJS microservice-based wallet system",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start:user-service": "ts-node apps/user-service/src/main.ts",

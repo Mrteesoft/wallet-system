@@ -1,4 +1,4 @@
-# Backend Engineer Technical Assessment
+# Wallet System
 
 This repository contains a NestJS microservice-based wallet system built in a monorepo structure. The solution uses gRPC for inter-service communication, Prisma ORM for database access, and PostgreSQL as the target database.
 
@@ -48,7 +48,7 @@ Business logic is still kept inside each microservice so service boundaries rema
 ## Project Structure
 
 ```text
-backend-assessment/
+wallet-system/
 |-- apps/
 |   |-- user-service/
 |   `-- wallet-service/
