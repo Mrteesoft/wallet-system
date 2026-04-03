@@ -173,14 +173,58 @@ npm run build
 - `CreditWallet`
 - `DebitWallet`
 
-## Example Requests
+## API Testing
 
-Use Postman gRPC with the proto files in `packages/proto/`, or use `grpcurl`.
+The required service contract in this assessment is gRPC, so API testing is shown with:
 
-### 1. Create user
+- Postman gRPC
+- `grpcurl` as the curl-style command-line equivalent for gRPC
+
+Proto files:
+
+- `packages/proto/user.proto`
+- `packages/proto/wallet.proto`
+
+Service addresses:
+
+- User service: `localhost:50051`
+- Wallet service: `localhost:50052`
+
+### Postman gRPC Setup
+
+For `CreateUser` and `GetUserById`:
+
+- Server: `localhost:50051`
+- Proto file: `packages/proto/user.proto`
+
+For `CreateWallet`, `GetWallet`, `CreditWallet`, and `DebitWallet`:
+
+- Server: `localhost:50052`
+- Proto file: `packages/proto/wallet.proto`
+
+### Example Requests
+
+#### 1. Create user
+
+Postman gRPC method:
+
+```text
+user.UserService/CreateUser
+```
+
+Postman message body:
+
+```json
+{
+  "email": "jane@example.com",
+  "name": "Jane Doe"
+}
+```
+
+`grpcurl` example:
 
 ```bash
-grpcurl -plaintext -d "{\"email\":\"jane@example.com\",\"name\":\"Jane Doe\"}" localhost:50051 user.UserService/CreateUser
+grpcurl -plaintext -import-path packages/proto -proto user.proto -d "{\"email\":\"jane@example.com\",\"name\":\"Jane Doe\"}" localhost:50051 user.UserService/CreateUser
 ```
 
 Example response:
@@ -196,37 +240,128 @@ Example response:
 
 This call also triggers wallet provisioning through `WalletService.CreateWallet`.
 
-### 2. Get user by id
+#### 2. Create wallet
 
-```bash
-grpcurl -plaintext -d "{\"id\":\"generated-user-id\"}" localhost:50051 user.UserService/GetUserById
+Postman gRPC method:
+
+```text
+wallet.WalletService/CreateWallet
 ```
 
-### 3. Get wallet
+Postman message body:
 
-```bash
-grpcurl -plaintext -d "{\"userId\":\"generated-user-id\"}" localhost:50052 wallet.WalletService/GetWallet
+```json
+{
+  "userId": "generated-user-id"
+}
 ```
 
-### 4. Credit wallet
+`grpcurl` example:
 
 ```bash
-grpcurl -plaintext -d "{\"userId\":\"generated-user-id\",\"amount\":150}" localhost:50052 wallet.WalletService/CreditWallet
+grpcurl -plaintext -import-path packages/proto -proto wallet.proto -d "{\"userId\":\"generated-user-id\"}" localhost:50052 wallet.WalletService/CreateWallet
 ```
 
-### 5. Debit wallet
+Note: `CreateWallet` is still exposed because it is part of the required wallet-service contract. In the normal flow it is invoked automatically by `CreateUser`, so a direct repeated call for the same user will usually return `ALREADY_EXISTS`.
+
+#### 3. Credit wallet
+
+Postman gRPC method:
+
+```text
+wallet.WalletService/CreditWallet
+```
+
+Postman message body:
+
+```json
+{
+  "userId": "generated-user-id",
+  "amount": 150
+}
+```
+
+`grpcurl` example:
 
 ```bash
-grpcurl -plaintext -d "{\"userId\":\"generated-user-id\",\"amount\":40}" localhost:50052 wallet.WalletService/DebitWallet
+grpcurl -plaintext -import-path packages/proto -proto wallet.proto -d "{\"userId\":\"generated-user-id\",\"amount\":150}" localhost:50052 wallet.WalletService/CreditWallet
 ```
 
-### 6. Create wallet directly
+#### 4. Debit wallet
 
-`CreateWallet` is still exposed because it is part of the required wallet-service contract. In the normal flow, it is invoked automatically by `CreateUser`, so a direct repeated call for the same user should return `ALREADY_EXISTS`.
+Postman gRPC method:
+
+```text
+wallet.WalletService/DebitWallet
+```
+
+Postman message body:
+
+```json
+{
+  "userId": "generated-user-id",
+  "amount": 40
+}
+```
+
+`grpcurl` example:
 
 ```bash
-grpcurl -plaintext -d "{\"userId\":\"generated-user-id\"}" localhost:50052 wallet.WalletService/CreateWallet
+grpcurl -plaintext -import-path packages/proto -proto wallet.proto -d "{\"userId\":\"generated-user-id\",\"amount\":40}" localhost:50052 wallet.WalletService/DebitWallet
 ```
+
+#### 5. Get wallet
+
+Postman gRPC method:
+
+```text
+wallet.WalletService/GetWallet
+```
+
+Postman message body:
+
+```json
+{
+  "userId": "generated-user-id"
+}
+```
+
+`grpcurl` example:
+
+```bash
+grpcurl -plaintext -import-path packages/proto -proto wallet.proto -d "{\"userId\":\"generated-user-id\"}" localhost:50052 wallet.WalletService/GetWallet
+```
+
+#### 6. Get user by id
+
+Postman gRPC method:
+
+```text
+user.UserService/GetUserById
+```
+
+Postman message body:
+
+```json
+{
+  "id": "generated-user-id"
+}
+```
+
+`grpcurl` example:
+
+```bash
+grpcurl -plaintext -import-path packages/proto -proto user.proto -d "{\"id\":\"generated-user-id\"}" localhost:50051 user.UserService/GetUserById
+```
+
+### Suggested Test Order
+
+1. `CreateUser`
+2. `GetWallet`
+3. `CreditWallet`
+4. `DebitWallet`
+5. `GetWallet`
+6. `CreateWallet` to confirm duplicate-wallet protection
 
 ## Notes
 
@@ -234,4 +369,3 @@ grpcurl -plaintext -d "{\"userId\":\"generated-user-id\"}" localhost:50052 walle
 - The wallet service never uses user business logic directly. It validates user existence by calling the user service over gRPC.
 - A single PostgreSQL database is used for the assessment to keep setup simple, while service boundaries are preserved in code.
 - The Prisma schema intentionally avoids a direct relation between `User` and `Wallet` so each service keeps ownership of its own model.
-# wallet-system
