@@ -42,15 +42,14 @@ Business logic is still kept inside each microservice so service boundaries rema
 
 ```text
 backend-assessment/
-├── apps/
-│   ├── user-service/
-│   └── wallet-service/
-├── packages/
-│   ├── common/
-│   ├── prisma/
-│   └── proto/
-├── docker-compose.yml
-└── README.md
+|-- apps/
+|   |-- user-service/
+|   `-- wallet-service/
+|-- packages/
+|   |-- common/
+|   |-- prisma/
+|   `-- proto/
+`-- README.md
 ```
 
 ## Features
@@ -82,7 +81,7 @@ backend-assessment/
 
 - Node.js 20+
 - npm 10+
-- PostgreSQL 16+ or Docker Desktop
+- PostgreSQL 16+
 
 ## Environment Variables
 
@@ -108,13 +107,7 @@ npm install
 
 ## Start PostgreSQL
 
-If Docker is available:
-
-```bash
-docker compose up -d
-```
-
-If you already have PostgreSQL installed locally, create a database named `backend_assessment` and update `DATABASE_URL` as needed.
+Create a PostgreSQL database named `backend_assessment` and update `DATABASE_URL` if your local credentials or port differ from the default example.
 
 ## Prisma Commands
 
@@ -228,3 +221,4 @@ grpcurl -plaintext -d "{\"userId\":\"generated-user-id\",\"amount\":40}" localho
 - Wallet creation is explicit through `CreateWallet`, which makes the gRPC flow easier to verify during assessment review.
 - The wallet service never uses user business logic directly. It validates user existence by calling the user service over gRPC.
 - A single PostgreSQL database is used for the assessment to keep setup simple, while service boundaries are preserved in code.
+# wallet-system
