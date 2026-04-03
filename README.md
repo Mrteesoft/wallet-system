@@ -185,6 +185,11 @@ Proto files:
 - `packages/proto/user.proto`
 - `packages/proto/wallet.proto`
 
+Local file locations for testing on this machine:
+
+- `C:\Users\Tolul\Desktop\Technical-assement\packages\proto\user.proto`
+- `C:\Users\Tolul\Desktop\Technical-assement\packages\proto\wallet.proto`
+
 Service addresses:
 
 - User service: `localhost:50051`
