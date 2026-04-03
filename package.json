@@ -1,0 +1,37 @@
+{
+  "name": "backend-assessment",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NestJS microservice-based wallet system assessment",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start:user-service": "ts-node apps/user-service/src/main.ts",
+    "start:wallet-service": "ts-node apps/wallet-service/src/main.ts",
+    "start:dev": "concurrently \"npm run start:user-service\" \"npm run start:wallet-service\"",
+    "start:user-service:prod": "node dist/apps/user-service/src/main.js",
+    "start:wallet-service:prod": "node dist/apps/wallet-service/src/main.js",
+    "prisma:generate": "prisma generate --schema packages/prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate dev --schema packages/prisma/schema.prisma",
+    "prisma:studio": "prisma studio --schema packages/prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.14.0",
+    "@grpc/proto-loader": "^0.8.0",
+    "@nestjs/common": "^11.1.8",
+    "@nestjs/core": "^11.1.8",
+    "@nestjs/microservices": "^11.1.8",
+    "@prisma/client": "^6.7.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "dotenv": "^17.4.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "concurrently": "^9.1.2",
+    "prisma": "^6.7.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
