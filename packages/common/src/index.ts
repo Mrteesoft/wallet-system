@@ -4,5 +4,7 @@ export * from './base/base.grpc.service';
 export * from './base/base.repository';
 export * from './errors/domain.errors';
 export * from './grpc/grpc.constants';
+export * from './interceptors/rpc-logging.interceptor';
+export * from './logging/logging.module';
 export * from './prisma/prisma.module';
 export * from './prisma/prisma.service';

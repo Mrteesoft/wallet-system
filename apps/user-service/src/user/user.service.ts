@@ -1,6 +1,7 @@
 import { status } from '@grpc/grpc-js';
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
+import { PinoLogger } from 'nestjs-pino';
 
 import { BaseEntityGrpcService } from '../../../../packages/common/src/base/base.entity-grpc.service';
 
@@ -13,16 +14,25 @@ import { UserRepository } from './user.repository';
 @Injectable()
 export class UserService extends BaseEntityGrpcService<User, UserResponse> {
   constructor(
+    logger: PinoLogger,
     private readonly userRepository: UserRepository,
     private readonly walletGrpcClient: WalletGrpcClient,
   ) {
-    super();
+    super(logger, UserService.name);
   }
 
   async createUser(payload: CreateUserRequestDto): Promise<UserResponse> {
+    this.logActionStarted('create_user', {
+      email: payload.email,
+      name: payload.name,
+    });
+
     const existingUser = await this.userRepository.findByEmail(payload.email);
 
     if (existingUser) {
+      this.logActionWarn('create_user_duplicate_email', {
+        email: payload.email,
+      });
       this.alreadyExists(`User with email ${payload.email} already exists`);
     }
 
@@ -34,18 +44,37 @@ export class UserService extends BaseEntityGrpcService<User, UserResponse> {
     try {
       await this.walletGrpcClient.createWallet({ userId: user.id });
 
+      this.logActionSucceeded('create_user', {
+        userId: user.id,
+        email: user.email,
+        walletProvisioned: true,
+      });
+
       return this.toResponse(user);
     } catch (error) {
       await this.rollbackUserCreation(user.id);
+      this.logActionFailed('create_user', error, {
+        userId: user.id,
+        email: user.email,
+        walletProvisioned: false,
+        rollbackAttempted: true,
+      });
       this.handleWalletProvisioningFailure(error);
     }
   }
 
   async getUserById(payload: GetUserByIdRequestDto): Promise<UserResponse> {
-    return this.toRequiredResponse(
-      await this.userRepository.findById(payload.id),
+    const user = await this.userRepository.findById(payload.id);
+    const response = this.toRequiredResponse(
+      user,
       `User ${payload.id} not found`,
     );
+
+    this.logActionSucceeded('get_user_by_id', {
+      userId: payload.id,
+    });
+
+    return response;
   }
 
   protected override toResponse(user: User): UserResponse {
@@ -60,8 +89,13 @@ export class UserService extends BaseEntityGrpcService<User, UserResponse> {
   private async rollbackUserCreation(userId: string): Promise<void> {
     try {
       await this.userRepository.deleteById(userId);
+      this.logActionWarn('create_user_rollback_succeeded', {
+        userId,
+      });
     } catch {
-      // Best-effort compensation for assessment purposes.
+      this.logActionFailed('create_user_rollback_failed', 'delete_user_failed', {
+        userId,
+      });
     }
   }
 

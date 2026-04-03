@@ -1,10 +1,21 @@
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
-import { PrismaModule } from '../../../packages/common/src/prisma/prisma.module';
+import {
+  PrismaModule,
+  RpcLoggingInterceptor,
+  createLoggingModule,
+} from '../../../packages/common/src';
 
 import { UserModule } from './user/user.module';
 
 @Module({
-  imports: [PrismaModule, UserModule],
+  imports: [createLoggingModule('user-service'), PrismaModule, UserModule],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RpcLoggingInterceptor,
+    },
+  ],
 })
 export class AppModule {}
