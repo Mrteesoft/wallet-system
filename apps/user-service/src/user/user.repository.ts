@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 
-import { BaseRepository } from '../../../../packages/common/src/base/base.repository';
+import { BaseEntityRepository } from '../../../../packages/common/src/base/base.entity.repository';
 import { PrismaService } from '../../../../packages/common/src/prisma/prisma.service';
 
 type CreateUserData = {
@@ -10,12 +10,14 @@ type CreateUserData = {
 };
 
 @Injectable()
-export class UserRepository extends BaseRepository {
+export class UserRepository extends BaseEntityRepository<User, CreateUserData> {
+  protected readonly entityName = 'User';
+
   constructor(prisma: PrismaService) {
     super(prisma);
   }
 
-  findById(id: string): Promise<User | null> {
+  override findById(id: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: { id },
     });
@@ -27,9 +29,15 @@ export class UserRepository extends BaseRepository {
     });
   }
 
-  create(data: CreateUserData): Promise<User> {
+  override create(data: CreateUserData): Promise<User> {
     return this.prisma.user.create({
       data,
+    });
+  }
+
+  deleteById(id: string): Promise<User> {
+    return this.prisma.user.delete({
+      where: { id },
     });
   }
 }

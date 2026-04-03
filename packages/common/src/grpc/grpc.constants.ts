@@ -6,6 +6,7 @@ export const USER_GRPC_CLIENT = 'USER_GRPC_CLIENT';
 
 export const WALLET_PROTO_PACKAGE = 'wallet';
 export const WALLET_SERVICE_NAME = 'WalletService';
+export const WALLET_GRPC_CLIENT = 'WALLET_GRPC_CLIENT';
 
 export const getProtoPath = (fileName: string): string =>
   join(process.cwd(), 'packages', 'proto', fileName);

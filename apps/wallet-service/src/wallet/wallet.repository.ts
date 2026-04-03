@@ -1,17 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { Wallet } from '@prisma/client';
 
-import { BaseRepository } from '../../../../packages/common/src/base/base.repository';
+import { BaseEntityRepository } from '../../../../packages/common/src/base/base.entity.repository';
 import {
   EntityNotFoundError,
   InsufficientBalanceError,
 } from '../../../../packages/common/src/errors/domain.errors';
 import { PrismaService } from '../../../../packages/common/src/prisma/prisma.service';
 
+type CreateWalletData = {
+  userId: string;
+};
+
 @Injectable()
-export class WalletRepository extends BaseRepository {
+export class WalletRepository extends BaseEntityRepository<Wallet, CreateWalletData> {
+  protected readonly entityName = 'Wallet';
+
   constructor(prisma: PrismaService) {
     super(prisma);
+  }
+
+  override findById(id: string): Promise<Wallet | null> {
+    return this.prisma.wallet.findUnique({
+      where: { id },
+    });
   }
 
   findByUserId(userId: string): Promise<Wallet | null> {
@@ -20,10 +32,17 @@ export class WalletRepository extends BaseRepository {
     });
   }
 
-  createForUser(userId: string): Promise<Wallet> {
+  override create(data: CreateWalletData): Promise<Wallet> {
     return this.prisma.wallet.create({
-      data: { userId },
+      data,
     });
+  }
+
+  async findByUserIdOrThrow(userId: string): Promise<Wallet> {
+    return this.ensureEntity(
+      await this.findByUserId(userId),
+      `Wallet for user ${userId} not found`,
+    );
   }
 
   creditByUserId(userId: string, amount: number): Promise<Wallet> {

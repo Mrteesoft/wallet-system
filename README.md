@@ -7,6 +7,7 @@ This repository contains a NestJS microservice-based wallet system built in a mo
 - `apps/user-service`
   - Owns user creation and user lookup
   - Exposes `CreateUser` and `GetUserById` over gRPC
+  - Automatically provisions a wallet by calling `WalletService.CreateWallet`
 - `apps/wallet-service`
   - Owns wallet creation and wallet balance operations
   - Exposes `CreateWallet`, `GetWallet`, `CreditWallet`, and `DebitWallet` over gRPC
@@ -22,9 +23,15 @@ This repository contains a NestJS microservice-based wallet system built in a mo
 
 To avoid duplicating plumbing code across services, shared technical behavior lives in reusable base classes:
 
+- `BaseEntityGrpcService<TEntity, TResponse>`
+  - abstract service base class used by both microservices
+  - forces each service subclass to define its own response mapping
 - `BaseGrpcService`
   - shared gRPC error helpers
   - shared validation helper for positive amounts
+- `BaseEntityRepository<TEntity, TCreateData>`
+  - abstract repository base class used by service-specific repositories
+  - provides shared `findByIdOrThrow` and entity guard helpers
 - `BaseRepository`
   - shared Prisma helpers for numeric conversion
 
@@ -58,6 +65,7 @@ backend-assessment/
 
 - Create a user
 - Get a user by id
+- Automatically create a wallet when a user is created
 
 ### Wallet Service
 
@@ -186,39 +194,44 @@ Example response:
 }
 ```
 
+This call also triggers wallet provisioning through `WalletService.CreateWallet`.
+
 ### 2. Get user by id
 
 ```bash
 grpcurl -plaintext -d "{\"id\":\"generated-user-id\"}" localhost:50051 user.UserService/GetUserById
 ```
 
-### 3. Create wallet
-
-```bash
-grpcurl -plaintext -d "{\"userId\":\"generated-user-id\"}" localhost:50052 wallet.WalletService/CreateWallet
-```
-
-### 4. Get wallet
+### 3. Get wallet
 
 ```bash
 grpcurl -plaintext -d "{\"userId\":\"generated-user-id\"}" localhost:50052 wallet.WalletService/GetWallet
 ```
 
-### 5. Credit wallet
+### 4. Credit wallet
 
 ```bash
 grpcurl -plaintext -d "{\"userId\":\"generated-user-id\",\"amount\":150}" localhost:50052 wallet.WalletService/CreditWallet
 ```
 
-### 6. Debit wallet
+### 5. Debit wallet
 
 ```bash
 grpcurl -plaintext -d "{\"userId\":\"generated-user-id\",\"amount\":40}" localhost:50052 wallet.WalletService/DebitWallet
 ```
 
+### 6. Create wallet directly
+
+`CreateWallet` is still exposed because it is part of the required wallet-service contract. In the normal flow, it is invoked automatically by `CreateUser`, so a direct repeated call for the same user should return `ALREADY_EXISTS`.
+
+```bash
+grpcurl -plaintext -d "{\"userId\":\"generated-user-id\"}" localhost:50052 wallet.WalletService/CreateWallet
+```
+
 ## Notes
 
-- Wallet creation is explicit through `CreateWallet`, which makes the gRPC flow easier to verify during assessment review.
+- When a user is created through `UserService.CreateUser`, the user service automatically provisions a wallet by calling `WalletService.CreateWallet` over gRPC.
 - The wallet service never uses user business logic directly. It validates user existence by calling the user service over gRPC.
 - A single PostgreSQL database is used for the assessment to keep setup simple, while service boundaries are preserved in code.
+- The Prisma schema intentionally avoids a direct relation between `User` and `Wallet` so each service keeps ownership of its own model.
 # wallet-system

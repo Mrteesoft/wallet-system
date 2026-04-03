@@ -12,7 +12,6 @@ model User {
   email     String   @unique
   name      String
   createdAt DateTime @default(now())
-  wallet    Wallet?
 }
 
 model Wallet {
@@ -20,5 +19,4 @@ model Wallet {
   userId    String   @unique
   balance   Decimal  @default(0) @db.Decimal(18, 2)
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

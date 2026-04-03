@@ -2,7 +2,7 @@ import { status } from '@grpc/grpc-js';
 import { Injectable } from '@nestjs/common';
 import { Wallet } from '@prisma/client';
 
-import { BaseGrpcService } from '../../../../packages/common/src/base/base.grpc.service';
+import { BaseEntityGrpcService } from '../../../../packages/common/src/base/base.entity-grpc.service';
 import {
   EntityNotFoundError,
   InsufficientBalanceError,
@@ -16,7 +16,7 @@ import { UserGrpcClient } from './user-grpc.client';
 import { WalletRepository } from './wallet.repository';
 
 @Injectable()
-export class WalletService extends BaseGrpcService {
+export class WalletService extends BaseEntityGrpcService<Wallet, WalletResponse> {
   constructor(
     private readonly walletRepository: WalletRepository,
     private readonly userGrpcClient: UserGrpcClient,
@@ -33,16 +33,17 @@ export class WalletService extends BaseGrpcService {
 
     await this.ensureUserExists(payload.userId);
 
-    const wallet = await this.walletRepository.createForUser(payload.userId);
+    const wallet = await this.walletRepository.create({
+      userId: payload.userId,
+    });
 
-    return this.toWalletResponse(wallet);
+    return this.toResponse(wallet);
   }
 
   async getWallet(payload: GetWalletRequestDto): Promise<WalletResponse> {
-    const wallet = await this.walletRepository.findByUserId(payload.userId);
-
-    return this.toWalletResponse(
-      this.ensureFound(wallet, `Wallet for user ${payload.userId} not found`),
+    return this.toRequiredResponse(
+      await this.walletRepository.findByUserId(payload.userId),
+      `Wallet for user ${payload.userId} not found`,
     );
   }
 
@@ -51,15 +52,22 @@ export class WalletService extends BaseGrpcService {
   ): Promise<WalletResponse> {
     this.ensurePositiveAmount(payload.amount);
 
-    const wallet = await this.walletRepository.findByUserId(payload.userId);
-    this.ensureFound(wallet, `Wallet for user ${payload.userId} not found`);
+    try {
+      await this.walletRepository.findByUserIdOrThrow(payload.userId);
 
-    const updatedWallet = await this.walletRepository.creditByUserId(
-      payload.userId,
-      payload.amount,
-    );
+      const updatedWallet = await this.walletRepository.creditByUserId(
+        payload.userId,
+        payload.amount,
+      );
 
-    return this.toWalletResponse(updatedWallet);
+      return this.toResponse(updatedWallet);
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        this.notFound(error.message);
+      }
+
+      throw error;
+    }
   }
 
   async debitWallet(
@@ -73,7 +81,7 @@ export class WalletService extends BaseGrpcService {
         payload.amount,
       );
 
-      return this.toWalletResponse(updatedWallet);
+      return this.toResponse(updatedWallet);
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
         this.notFound(error.message);
@@ -104,7 +112,7 @@ export class WalletService extends BaseGrpcService {
     }
   }
 
-  private toWalletResponse(wallet: Wallet): WalletResponse {
+  protected override toResponse(wallet: Wallet): WalletResponse {
     return {
       id: wallet.id,
       userId: wallet.userId,
